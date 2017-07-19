@@ -20,14 +20,22 @@ set +f
 # IFACE_wireless_phy ::= list of 'phy'<integer>
 # IFACE_wireless_rfkill_index ::= list of <integer> for rfkill command
 
+# <bus> ::= 'pci' | 'usb' | 'other'
+# <bus_which> ::= <integer> >= 0
+# BUS_<bus>_n ::= '0' .. number of <bus> network interfaces detected
+# BUS_<bus_which> ::= list of <integer> (enumeration index [0..BUS_<bus>_n - 1])
+# BUS_<bus> ::= list of <list>':'<list_which> for a given <bus>
+
 enum_interfaces() # {{{1
 {
 	local p x bus list which
 	IFACE_other_n=0 IFACE_wired_n=0 IFACE_wireless_n=0
-	unset IFACE_other_which IFACE_wired_which IFACE_wireless_which # [0..$IFACE_<>_n - 1]
+	unset IFACE_other_which IFACE_wired_which IFACE_wireless_which
 	unset IFACE_other_path IFACE_wired_path IFACE_wireless_path
 	unset IFACE_other_bus IFACE_wired_bus IFACE_wireless_bus
 	unset IFACE_wireless_phy IFACE_wireless_rfkill_index
+	BUS_other_n=0 BUS_pci_n=0 BUS_usb_n=0
+	unset BUS_other_which BUS_pci_which BUS_usb_which
 	for p in /sys/class/net/*; do
 		case $p in *\* ) return 1 ;; esac # no interfaces
 		x=$(ls -l $p/device/subsystem 2>/dev/null)
@@ -59,6 +67,23 @@ enum_interfaces() # {{{1
 					IFACE_wired_path="$IFACE_wired_path $p"
 					IFACE_wired_bus="$IFACE_wired_bus $bus"
 				fi
+				;;
+		esac
+		case $bus in
+			pci )
+				BUS_pci_which="$BUS_pci_which $BUS_pci_n"
+				BUS_pci_n=$(($BUS_pci_n + 1))
+				BUS_pci="$BUS_pci $list:$which"
+				;;
+			usb )
+				BUS_usb_which="$BUS_usb_which $BUS_usb_n"
+				BUS_usb_n=$(($BUS_usb_n + 1))
+				BUS_usb="$BUS_usb $list:$which"
+				;;
+			* )
+				BUS_other_which="$BUS_other_which $BUS_other_n"
+				BUS_other_n=$(($BUS_other_n + 1))
+				BUS_other="$BUS_other $list:$which"
 				;;
 		esac
 	done
@@ -123,3 +148,14 @@ get_iface_wired() # [--export] $1-which {{{1
 	$opt_e IFACE_which=$which # end
 }
 
+get_iface_by_bus() # [--export] $1-list:which {{{1
+{
+	local opt_e list which
+	if [ "$1" = --export ]; then opt_e=echo; shift; fi
+	list=${1%:*} which=${1#*:}
+	case $list in
+		other ) get_iface_other $which ;;
+		wireless ) get_iface_wireless $which ;;
+		wired ) get_iface_wired $which ;;
+	esac
+}

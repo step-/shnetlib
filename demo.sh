@@ -25,4 +25,11 @@ echo "*** $IFACE_wireless_n wireless interface(s) found:"
 for w in $IFACE_wireless_which; do
   get_iface_wireless --export $w
 done
+echo "*** $BUS_pci_n PCI network interfaces(s) found:"
+for lw in $BUS_pci; do
+  get_iface_by_bus --export $lw
+done
+echo "*** $BUS_usb_n USB network interfaces(s) found:"
+for lw in $BUS_usb; do
+  get_iface_by_bus --export $lw
 done
