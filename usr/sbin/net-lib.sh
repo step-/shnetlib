@@ -8,19 +8,23 @@
 set +f
 
 # {{{1}}}
-# IFACE_other_n ::= '0' .. number of "other" interfaces found.
-# IFACE_other_index ::= <integer> [<integer> ...]
-# IFACE_other_path ::= list of '/sys/class/net/<iface>'
-# IFACE_other_bus ::= list of 'NA' | 'pci' | 'usb' | ...
-# Similarly as above for IFACE_wireless_<> and IFACE_wired_<>.
+# <path> ::= paths '/sys/class/net/'*
+# <iface> ::= basenames '/sys/class/net/'*
+# <list> ::= 'other' | 'wireless' | 'wired'
+# <list_which> ::= <integer> >= 0
+# IFACE_<list>_n ::= '0' .. number of <list> interfaces detected
+# IFACE_<list>_which ::= list of <list_which> (enumeration index [0..IFACE_<list>_n - 1])
+# IFACE_<list>_path ::= <path>
+# IFACE_<list>_bus ::= list of 'NA' | 'pci' | 'usb' | ...
+# Similarly as above for each member of <list>.
 # IFACE_wireless_phy ::= list of 'phy'<integer>
-# IFACE_wireless_rfkill_index ::= list of <integer>
+# IFACE_wireless_rfkill_index ::= list of <integer> for rfkill command
 
 enum_interfaces() # {{{1
 {
-	local p x bus
+	local p x bus list which
 	IFACE_other_n=0 IFACE_wired_n=0 IFACE_wireless_n=0
-	unset IFACE_other_index IFACE_wired_index IFACE_wireless_index # [0..$IFACE_<x>_n - 1]
+	unset IFACE_other_which IFACE_wired_which IFACE_wireless_which # [0..$IFACE_<>_n - 1]
 	unset IFACE_other_path IFACE_wired_path IFACE_wireless_path
 	unset IFACE_other_bus IFACE_wired_bus IFACE_wireless_bus
 	unset IFACE_wireless_phy IFACE_wireless_rfkill_index
@@ -31,14 +35,16 @@ enum_interfaces() # {{{1
 		bus=${bus:-NA}
 		case ${p##*/} in
 			lo|teredo)
-				IFACE_other_index="$IFACE_other_index $IFACE_other_n"
+				list=other which=$IFACE_other_n
+				IFACE_other_which="$IFACE_other_which $IFACE_other_n"
 				IFACE_other_n=$(($IFACE_other_n + 1))
 				IFACE_other_path="$IFACE_other_path $p"
 				IFACE_other_bus="$IFACE_other_bus $bus"
 				;;
 			*)
 				if [ -e $p/wireless ]; then
-					IFACE_wireless_index="$IFACE_wireless_index $IFACE_wireless_n"
+					list=wireless which=$IFACE_wireless_n
+					IFACE_wireless_which="$IFACE_wireless_which $IFACE_wireless_n"
 					IFACE_wireless_n=$(($IFACE_wireless_n + 1))
 					IFACE_wireless_path="$IFACE_wireless_path $p"
 					IFACE_wireless_bus="$IFACE_wireless_bus $bus"
@@ -47,7 +53,8 @@ enum_interfaces() # {{{1
 					for x in $p/phy80211/rfkill*/index; do read x < $x; done
 					IFACE_wireless_rfkill_index="$IFACE_wireless_rfkill_index ${x:-NA}"
 				else
-					IFACE_wired_index="$IFACE_wired_index $IFACE_wired_n"
+					list=wired which=$IFACE_wired_n
+					IFACE_wired_which="$IFACE_wired_which $IFACE_wired_n"
 					IFACE_wired_n=$(($IFACE_wired_n + 1))
 					IFACE_wired_path="$IFACE_wired_path $p"
 					IFACE_wired_bus="$IFACE_wired_bus $bus"
@@ -71,48 +78,48 @@ init_get_iface() # {{{1
 	unset IFACE_phy IFACE_rfkill_index
 }
 
-get_iface_other() # [-e] $1-index {{{1
+get_iface_other() # [--export] $1-which {{{1
 {
-	local opt_e index
-	if [ "$1" = -e ]; then opt_e=echo; shift; fi
-	index=${1:-error}
+	local opt_e which
+	if [ "$1" = --export ]; then opt_e=echo; shift; fi
+	which=${1:-error}
 	init_get_iface
-	[ $index = error -o $index -gt $IFACE_other_n ] && return 1
-	$opt_e IFACE_list=other
-	$opt_e IFACE_which=$index
-	set -- $IFACE_other_path; shift $index; $opt_e IFACE_path=$1
+	[ $which = error -o $which -gt $IFACE_other_n ] && return 1
+	$opt_e IFACE_list=other # begin
+	set -- $IFACE_other_path; shift $which; $opt_e IFACE_path=$1
 	$opt_e IFACE_iface=${IFACE_other_path##*/}
-	set -- $IFACE_other_bus; shift $index; $opt_e IFACE_bus=$1
+	set -- $IFACE_other_bus; shift $which; $opt_e IFACE_bus=$1
+	$opt_e IFACE_which=$which # end
 }
 
-get_iface_wireless() # [-e] $1-index {{{1
+get_iface_wireless() # [--export] $1-which {{{1
 {
-	local opt_e index
-	if [ "$1" = -e ]; then opt_e=echo; shift; fi
-	index=${1:-error}
+	local opt_e which
+	if [ "$1" = --export ]; then opt_e=echo; shift; fi
+	which=${1:-error}
 	init_get_iface
-	[ $index = error -o $index -gt $IFACE_wireless_n ] && return 1
-	$opt_e IFACE_list=wireless
-	$opt_e IFACE_which=$index
-	set -- $IFACE_wireless_path; shift $index; $opt_e IFACE_path=$1
+	[ $which = error -o $which -gt $IFACE_wireless_n ] && return 1
+	$opt_e IFACE_list=wireless # begin
+	set -- $IFACE_wireless_path; shift $which; $opt_e IFACE_path=$1
 	$opt_e IFACE_iface=${IFACE_wireless_path##*/}
-	set -- $IFACE_wireless_bus; shift $index; $opt_e IFACE_bus=$1
-	set -- $IFACE_wireless_phy; shift $index; $opt_e IFACE_phy=$1
-	set -- $IFACE_wireless_rfkill_index; shift $index; $opt_e IFACE_rfkill_index=$1
+	set -- $IFACE_wireless_bus; shift $which; $opt_e IFACE_bus=$1
+	set -- $IFACE_wireless_phy; shift $which; $opt_e IFACE_phy=$1
+	set -- $IFACE_wireless_rfkill_index; shift $which; $opt_e IFACE_rfkill_index=$1
+	$opt_e IFACE_which=$which # end
 }
 
 
-get_iface_wired() # [-e] $1-index {{{1
+get_iface_wired() # [--export] $1-which {{{1
 {
-	local opt_e index
-	if [ "$1" = -e ]; then opt_e=echo; shift; fi
-	index=${1:-error}
+	local opt_e which
+	if [ "$1" = --export ]; then opt_e=echo; shift; fi
+	which=${1:-error}
 	init_get_iface
-	[ $index = error -o $index -gt $IFACE_wired_n ] && return 1
-	$opt_e IFACE_list=wired
-	$opt_e IFACE_which=$index
-	set -- $IFACE_wired_path; shift $index; $opt_e IFACE_path=$1
+	[ $which = error -o $which -gt $IFACE_wired_n ] && return 1
+	$opt_e IFACE_list=wired # begin
+	set -- $IFACE_wired_path; shift $which; $opt_e IFACE_path=$1
 	$opt_e IFACE_iface=${IFACE_wired_path##*/}
-	set -- $IFACE_wired_bus; shift $index; $opt_e IFACE_bus=$1
+	set -- $IFACE_wired_bus; shift $which; $opt_e IFACE_bus=$1
+	$opt_e IFACE_which=$which # end
 }
 

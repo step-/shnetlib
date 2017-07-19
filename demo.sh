@@ -13,12 +13,16 @@
 # Main {{{1
 . "${0%/*}/usr/sbin/net-lib.sh"
 enum_interfaces
-for i in $IFACE_other_index; do
-  get_iface_other -e $i
+echo "*** $IFACE_other_n other interface(s) found:"
+for w in $IFACE_other_which; do
+  get_iface_other --export $w
 done
-for i in $IFACE_wired_index; do
-  get_iface_wired -e $i
+echo "*** $IFACE_wired_n wired interface(s) found:"
+for w in $IFACE_wired_which; do
+  get_iface_wired --export $w
 done
-for i in $IFACE_wireless_index; do
-  get_iface_wireless -e $i
+echo "*** $IFACE_wireless_n wireless interface(s) found:"
+for w in $IFACE_wireless_which; do
+  get_iface_wireless --export $w
+done
 done
