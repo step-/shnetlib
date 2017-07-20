@@ -112,7 +112,7 @@ get_iface_other() # [--export] $1-which {{{1
 	[ $which = error -o $which -gt $IFACE_other_n ] && return 1
 	$opt_e IFACE_list=other # begin
 	set -- $IFACE_other_path; shift $which; $opt_e IFACE_path=$1
-	$opt_e IFACE_iface=${IFACE_other_path##*/}
+	$opt_e IFACE_iface=${1##*/}
 	set -- $IFACE_other_bus; shift $which; $opt_e IFACE_bus=$1
 	$opt_e IFACE_which=$which # end
 }
@@ -126,7 +126,7 @@ get_iface_wireless() # [--export] $1-which {{{1
 	[ $which = error -o $which -gt $IFACE_wireless_n ] && return 1
 	$opt_e IFACE_list=wireless # begin
 	set -- $IFACE_wireless_path; shift $which; $opt_e IFACE_path=$1
-	$opt_e IFACE_iface=${IFACE_wireless_path##*/}
+	$opt_e IFACE_iface=${1##*/}
 	set -- $IFACE_wireless_bus; shift $which; $opt_e IFACE_bus=$1
 	set -- $IFACE_wireless_phy; shift $which; $opt_e IFACE_phy=$1
 	set -- $IFACE_wireless_rfkill_index; shift $which; $opt_e IFACE_rfkill_index=$1
@@ -143,7 +143,7 @@ get_iface_wired() # [--export] $1-which {{{1
 	[ $which = error -o $which -gt $IFACE_wired_n ] && return 1
 	$opt_e IFACE_list=wired # begin
 	set -- $IFACE_wired_path; shift $which; $opt_e IFACE_path=$1
-	$opt_e IFACE_iface=${IFACE_wired_path##*/}
+	$opt_e IFACE_iface=${1##*/}
 	set -- $IFACE_wired_bus; shift $which; $opt_e IFACE_bus=$1
 	$opt_e IFACE_which=$which # end
 }
