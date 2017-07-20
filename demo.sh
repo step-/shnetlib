@@ -11,7 +11,7 @@
 # set -x
 
 # Main {{{1
-. "${0%/*}/usr/sbin/net-lib.sh"
+. "${0%/*}/usr/sbin/shnetlib.sh"
 enum_interfaces
 echo "*** $IFACE_other_n other interface(s) found:"
 for w in $IFACE_other_which; do
