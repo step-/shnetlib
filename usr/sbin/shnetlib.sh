@@ -99,7 +99,12 @@ enum_interfaces() # {{{1
 # IFACE_path ::= <IFACE_which>'th element of IFACE_<IFACE_list>_path
 # IFACE_iface ::= <IFACE_which>'th element of IFACE_<IFACE_list>_iface (basename of IFACE_path)
 # IFACE_bus ::= 'NA' | <IFACE_which>'th element of IFACE_<IFACE_list>_bus
-# Ditto for IFACE_phy and IFACE_rfkill_index when IFACE_list == 'wireless'
+# When IFACE_list == 'wireless' also:
+#  IFACE_phy ::= 'phy'<digit>
+#  IFACE_rfkill_index ::= <digit> (unrelated to phy above)
+#  IFACE_rfkill_state ::= <digit>, '1'(enabled) <>'1'(disabled:reason)
+#  IFACE_rfkill_soft ::= '0'|'1', '0'(unblocked), '1'(soft-blocked)
+#  IFACE_rfkill_hard ::= '0'|'1', '0'(unblocked), '1'(hard-blocked)
 
 init_get_iface() # {{{1
 {
@@ -120,12 +125,14 @@ get_iface_other() # [--export] $1-which {{{1
 	set -- $IFACE_other_iface; shift $which; IFACE_iface=$1
 	set -- $IFACE_other_bus; shift $which; IFACE_bus=$1
 	IFACE_which=$which # end
-  [ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus IFACE_which $IFACE_which
+	[ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list \
+		IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus \
+		IFACE_which $IFACE_which
 }
 
 get_iface_wireless() # [--export] $1-which {{{1
 {
-	local opt_e which
+	local opt_e which p
 	if [ "$1" = --export ]; then opt_e=echo; shift; fi
 	which=${1:-error}
 	init_get_iface
@@ -136,8 +143,17 @@ get_iface_wireless() # [--export] $1-which {{{1
 	set -- $IFACE_wireless_bus; shift $which; IFACE_bus=$1
 	set -- $IFACE_wireless_phy; shift $which; IFACE_phy=$1
 	set -- $IFACE_wireless_rfkill_index; shift $which; IFACE_rfkill_index=$1
+	p=$IFACE_path/phy80211/rfkill$IFACE_rfkill_index
+	read IFACE_rfkill_hard < $p/hard
+	read IFACE_rfkill_soft < $p/soft
+	read IFACE_rfkill_state < $p/state
 	IFACE_which=$which # end
-  [ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus IFACE_phy $IFACE_phy IFACE_rfkill_index $IFACE_rfkill_index IFACE_which $IFACE_which
+	[ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list \
+		IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus \
+		IFACE_phy $IFACE_phy IFACE_rfkill_index $IFACE_rfkill_index \
+		IFACE_rfkill_hard $IFACE_rfkill_hard IFACE_rfkill_soft $IFACE_rfkill_soft \
+		IFACE_rfkill_state $IFACE_rfkill_state \
+		IFACE_which $IFACE_which
 }
 
 
@@ -153,7 +169,9 @@ get_iface_wired() # [--export] $1-which {{{1
 	set -- $IFACE_wired_iface; shift $which; IFACE_iface=$1
 	set -- $IFACE_wired_bus; shift $which; IFACE_bus=$1
 	IFACE_which=$which # end
-  [ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus IFACE_which $IFACE_which
+	[ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list \
+		IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus \
+		IFACE_which $IFACE_which
 }
 
 get_iface_by_bus() # [--export] $1-list:which {{{1
