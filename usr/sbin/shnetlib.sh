@@ -115,11 +115,12 @@ get_iface_other() # [--export] $1-which {{{1
 	which=${1:-error}
 	init_get_iface
 	[ $which = error -o $which -gt $IFACE_other_n ] && return 1
-	$opt_e IFACE_list=other # begin
-	set -- $IFACE_other_path; shift $which; $opt_e IFACE_path=$1
-	set -- $IFACE_other_iface; shift $which; $opt_e IFACE_iface=$1
-	set -- $IFACE_other_bus; shift $which; $opt_e IFACE_bus=$1
-	$opt_e IFACE_which=$which # end
+	IFACE_list=other # begin
+	set -- $IFACE_other_path; shift $which; IFACE_path=$1
+	set -- $IFACE_other_iface; shift $which; IFACE_iface=$1
+	set -- $IFACE_other_bus; shift $which; IFACE_bus=$1
+	IFACE_which=$which # end
+  [ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus IFACE_which $IFACE_which
 }
 
 get_iface_wireless() # [--export] $1-which {{{1
@@ -129,13 +130,14 @@ get_iface_wireless() # [--export] $1-which {{{1
 	which=${1:-error}
 	init_get_iface
 	[ $which = error -o $which -gt $IFACE_wireless_n ] && return 1
-	$opt_e IFACE_list=wireless # begin
-	set -- $IFACE_wireless_path; shift $which; $opt_e IFACE_path=$1
-	set -- $IFACE_wireless_iface; shift $which; $opt_e IFACE_iface=$1
-	set -- $IFACE_wireless_bus; shift $which; $opt_e IFACE_bus=$1
-	set -- $IFACE_wireless_phy; shift $which; $opt_e IFACE_phy=$1
-	set -- $IFACE_wireless_rfkill_index; shift $which; $opt_e IFACE_rfkill_index=$1
-	$opt_e IFACE_which=$which # end
+	IFACE_list=wireless # begin
+	set -- $IFACE_wireless_path; shift $which; IFACE_path=$1
+	set -- $IFACE_wireless_iface; shift $which; IFACE_iface=$1
+	set -- $IFACE_wireless_bus; shift $which; IFACE_bus=$1
+	set -- $IFACE_wireless_phy; shift $which; IFACE_phy=$1
+	set -- $IFACE_wireless_rfkill_index; shift $which; IFACE_rfkill_index=$1
+	IFACE_which=$which # end
+  [ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus IFACE_phy $IFACE_phy IFACE_rfkill_index $IFACE_rfkill_index IFACE_which $IFACE_which
 }
 
 
@@ -146,11 +148,12 @@ get_iface_wired() # [--export] $1-which {{{1
 	which=${1:-error}
 	init_get_iface
 	[ $which = error -o $which -gt $IFACE_wired_n ] && return 1
-	$opt_e IFACE_list=wired # begin
-	set -- $IFACE_wired_path; shift $which; $opt_e IFACE_path=$1
-	set -- $IFACE_wired_iface; shift $which; $opt_e IFACE_iface=$1
-	set -- $IFACE_wired_bus; shift $which; $opt_e IFACE_bus=$1
-	$opt_e IFACE_which=$which # end
+	IFACE_list=wired # begin
+	set -- $IFACE_wired_path; shift $which; IFACE_path=$1
+	set -- $IFACE_wired_iface; shift $which; IFACE_iface=$1
+	set -- $IFACE_wired_bus; shift $which; IFACE_bus=$1
+	IFACE_which=$which # end
+  [ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus IFACE_which $IFACE_which
 }
 
 get_iface_by_bus() # [--export] $1-list:which {{{1
