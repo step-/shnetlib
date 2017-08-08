@@ -12,6 +12,7 @@
 
 # Main {{{1
 . "${0%/*}/usr/sbin/shnetlib.sh"
+SHNETLIB_MODE=detailed
 enum_interfaces
 echo "*** $IFACE_other_n other interface(s) found:"
 for w in $IFACE_other_which; do

@@ -99,6 +99,8 @@ enum_interfaces() # {{{1
 # IFACE_path ::= <IFACE_which>'th element of IFACE_<IFACE_list>_path
 # IFACE_iface ::= <IFACE_which>'th element of IFACE_<IFACE_list>_iface (basename of IFACE_path)
 # IFACE_bus ::= 'NA' | <IFACE_which>'th element of IFACE_<IFACE_list>_bus
+# When SHNETLIB_MODE==detailed also:
+#  IFACE_module_path ::= 'NA' | driver module path
 # When IFACE_list == 'wireless' also:
 #  IFACE_phy ::= 'phy'<digit>
 #  IFACE_rfkill_index ::= <digit> (unrelated to phy above)
@@ -110,7 +112,18 @@ init_get_iface() # {{{1
 {
 	unset IFACE_list IFACE_which IFACE_iface
 	unset IFACE_path IFACE_bus
+	IFACE_module_path=NA
 	unset IFACE_phy IFACE_rfkill_index
+	unset IFACE_rfkill_hard IFACE_rfkill_soft IFACE_rfkill_state
+}
+
+get_iface_details_common() # $1-iface_path => $IFACE_module_path {{{1
+{
+	local path=$1 p
+	if [ detailed = "$SHNETLIB_MODE" ]; then
+		p=$path/device/driver/module
+		[ -L $p ] && IFACE_module_path=$(readlink -f $p)
+	fi
 }
 
 get_iface_other() # [--export] $1-which {{{1
@@ -124,9 +137,11 @@ get_iface_other() # [--export] $1-which {{{1
 	set -- $IFACE_other_path; shift $which; IFACE_path=$1
 	set -- $IFACE_other_iface; shift $which; IFACE_iface=$1
 	set -- $IFACE_other_bus; shift $which; IFACE_bus=$1
+	get_iface_details_common $IFACE_path
 	IFACE_which=$which # end
 	[ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list \
 		IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus \
+		IFACE_module_path "$IFACE_module_path" \
 		IFACE_which $IFACE_which
 }
 
@@ -143,6 +158,7 @@ get_iface_wireless() # [--export] $1-which {{{1
 	set -- $IFACE_wireless_bus; shift $which; IFACE_bus=$1
 	set -- $IFACE_wireless_phy; shift $which; IFACE_phy=$1
 	set -- $IFACE_wireless_rfkill_index; shift $which; IFACE_rfkill_index=$1
+	get_iface_details_common $IFACE_path
 	p=$IFACE_path/phy80211/rfkill$IFACE_rfkill_index
 	read IFACE_rfkill_hard < $p/hard
 	read IFACE_rfkill_soft < $p/soft
@@ -150,6 +166,7 @@ get_iface_wireless() # [--export] $1-which {{{1
 	IFACE_which=$which # end
 	[ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list \
 		IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus \
+		IFACE_module_path "$IFACE_module_path" \
 		IFACE_phy $IFACE_phy IFACE_rfkill_index $IFACE_rfkill_index \
 		IFACE_rfkill_hard $IFACE_rfkill_hard IFACE_rfkill_soft $IFACE_rfkill_soft \
 		IFACE_rfkill_state $IFACE_rfkill_state \
@@ -168,9 +185,11 @@ get_iface_wired() # [--export] $1-which {{{1
 	set -- $IFACE_wired_path; shift $which; IFACE_path=$1
 	set -- $IFACE_wired_iface; shift $which; IFACE_iface=$1
 	set -- $IFACE_wired_bus; shift $which; IFACE_bus=$1
+	get_iface_details_common $IFACE_path
 	IFACE_which=$which # end
 	[ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list \
 		IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus \
+		IFACE_module_path "$IFACE_module_path" \
 		IFACE_which $IFACE_which
 }
 
