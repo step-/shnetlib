@@ -2,6 +2,7 @@
 # Compatible /bin/sh /bin/bash busybox ash
 # Copyright (C) 2017 step
 # License: GPL2
+# Version 1.0.0
 
 # This file is sourced, not run.
 
