@@ -1,8 +1,8 @@
-#!/bin/dash
-# Compatible /bin/sh /bin/bash busybox ash
+# Compatible sh bash busybox-ash dash
 # Copyright (C) 2017 step
-# License: GPL2
+# License: GNU GPL2
 # Version 1.0.0
+# Homepage: https://github.com/step-/shnetlib
 
 # This file is sourced, not run.
 

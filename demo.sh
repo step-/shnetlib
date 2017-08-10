@@ -1,7 +1,6 @@
 #!/bin/dash
-# Compatible /bin/sh /bin/bash busybox ash
 # Copyright (C) 2017 step
-# License: GPL2
+# License: GNU GPL2
 
 # exec >>/tmp/${0##*/}.log 2>&1
 # echo ========================
