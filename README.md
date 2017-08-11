@@ -23,8 +23,8 @@ The project includes script file `demo.sh`.
 
 Other projects that use `shnetlib`:
 
-* [fatdog-wireless-radio](https://github.com/step-/scripts-to-go/) is a simple
-  wireless radio antenna manager script.
+* [fatdog-wireless-antenna](https://github.com/step-/scripts-to-go/) is a simple
+  wireless radio antenna manager GUI.
 
 ## Requirements and Installing
 
