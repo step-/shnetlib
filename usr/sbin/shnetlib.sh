@@ -20,7 +20,7 @@ set +f
 # IFACE_<list>_bus ::= list of 'NA' | 'pci' | 'usb' | ...
 # Similarly as above for each member of <list>.
 # IFACE_wireless_phy ::= list of 'phy'<integer>
-# IFACE_wireless_rfkill_index ::= list of <integer> for rfkill command
+# IFACE_wireless_rfkill_index ::= list of (<integer>|'NA') for rfkill command
 
 # <bus> ::= 'pci' | 'usb' | 'other'
 # <bus_which> ::= <integer> >= 0
@@ -64,6 +64,7 @@ enum_interfaces() # {{{1
 					read x < $p/phy80211/name
 					IFACE_wireless_phy="$IFACE_wireless_phy ${x:-NA}"
 					for x in $p/phy80211/rfkill*/index; do read x < $x; done
+					case x in *\** ) x=NA ;; esac
 					IFACE_wireless_rfkill_index="$IFACE_wireless_rfkill_index ${x:-NA}"
 				else
 					list=wired which=$IFACE_wired_n
@@ -104,7 +105,8 @@ enum_interfaces() # {{{1
 #  IFACE_module_path ::= 'NA' | driver module path
 # When IFACE_list == 'wireless' also:
 #  IFACE_phy ::= 'phy'<digit>
-#  IFACE_rfkill_index ::= <digit> (unrelated to phy above)
+#  IFACE_rfkill_index ::= 'NA' | <digit> (unrelated to phy above)
+#  and if the driver module supports rfkill (IFACE_rfkill_index != 'NA'):
 #  IFACE_rfkill_state ::= <digit>, '1'(enabled) <>'1'(disabled:reason)
 #  IFACE_rfkill_soft ::= '0'|'1', '0'(unblocked), '1'(soft-blocked)
 #  IFACE_rfkill_hard ::= '0'|'1', '0'(unblocked), '1'(hard-blocked)
@@ -160,18 +162,25 @@ get_iface_wireless() # [--export] $1-which {{{1
 	set -- $IFACE_wireless_phy; shift $which; IFACE_phy=$1
 	set -- $IFACE_wireless_rfkill_index; shift $which; IFACE_rfkill_index=$1
 	get_iface_details_common $IFACE_path
-	p=$IFACE_path/phy80211/rfkill$IFACE_rfkill_index
-	read IFACE_rfkill_hard < $p/hard
-	read IFACE_rfkill_soft < $p/soft
-	read IFACE_rfkill_state < $p/state
+	if ! [ NA = $IFACE_rfkill_index ]; then
+		p=$IFACE_path/phy80211/rfkill$IFACE_rfkill_index
+		read IFACE_rfkill_hard < $p/hard
+		read IFACE_rfkill_soft < $p/soft
+		read IFACE_rfkill_state < $p/state
+	fi
 	IFACE_which=$which # end
-	[ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list \
+	if [ "$opt_e" ]; then
+		printf "%s='%s'\n" IFACE_list $IFACE_list \
 		IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus \
 		IFACE_module_path "$IFACE_module_path" \
-		IFACE_phy $IFACE_phy IFACE_rfkill_index $IFACE_rfkill_index \
-		IFACE_rfkill_hard $IFACE_rfkill_hard IFACE_rfkill_soft $IFACE_rfkill_soft \
-		IFACE_rfkill_state $IFACE_rfkill_state \
-		IFACE_which $IFACE_which
+		IFACE_phy $IFACE_phy IFACE_rfkill_index $IFACE_rfkill_index
+		if ! [ NA = $IFACE_rfkill_index ]; then
+			printf "%s='%s'\n" \
+			IFACE_rfkill_hard $IFACE_rfkill_hard IFACE_rfkill_soft $IFACE_rfkill_soft \
+			IFACE_rfkill_state $IFACE_rfkill_state
+		fi
+		printf "%s='%s'\n" IFACE_which $IFACE_which
+	fi
 }
 
 
