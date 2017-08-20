@@ -17,10 +17,10 @@ set +f
 # IFACE_<list>_which ::= list of <list_which> (enumeration index [0..IFACE_<list>_n - 1])
 # IFACE_<list>_path ::= list of <path>
 # IFACE_<list>_iface ::= list of <iface>
-# IFACE_<list>_bus ::= list of 'NA' | 'pci' | 'usb' | ...
+# IFACE_<list>_bus ::= list of ('NA' | 'pci' | 'usb' | ...)
 # Similarly as above for each member of <list>.
-# IFACE_wireless_phy ::= list of 'phy'<integer>
-# IFACE_wireless_rfkill_index ::= list of (<integer>|'NA') for rfkill command
+# IFACE_wireless_phy ::= list of ('phy'<integer> | 'NA')
+# IFACE_wireless_rfkill_index ::= list of (<integer> | 'NA') for rfkill command
 
 # <bus> ::= 'pci' | 'usb' | 'other'
 # <bus_which> ::= <integer> >= 0
@@ -61,10 +61,13 @@ enum_interfaces() # {{{1
 					IFACE_wireless_path="$IFACE_wireless_path $p"
 					IFACE_wireless_iface="$IFACE_wireless_iface ${p##*/}"
 					IFACE_wireless_bus="$IFACE_wireless_bus $bus"
-					read x < $p/phy80211/name
+					x=NA; [ -e "$p/phy80211/name" ] && read x < "$p/phy80211/name"
 					IFACE_wireless_phy="$IFACE_wireless_phy ${x:-NA}"
-					for x in $p/phy80211/rfkill*/index; do read x < $x; done
-					case x in *\** ) x=NA ;; esac
+					for x in $p/phy80211/rfkill*/index; do
+						[ -e "$x" ] && read x < "$x"
+						break
+					done
+					case "$x" in *\** ) x=NA ;; esac
 					IFACE_wireless_rfkill_index="$IFACE_wireless_rfkill_index ${x:-NA}"
 				else
 					list=wired which=$IFACE_wired_n
@@ -104,8 +107,8 @@ enum_interfaces() # {{{1
 # When SHNETLIB_MODE==detailed also:
 #  IFACE_module_path ::= 'NA' | driver module path
 # When IFACE_list == 'wireless' also:
-#  IFACE_phy ::= 'phy'<digit>
-#  IFACE_rfkill_index ::= 'NA' | <digit> (unrelated to phy above)
+#  IFACE_phy ::= 'NA' | 'phy'<digit>
+#  IFACE_rfkill_index ::= 'NA' | <digit> (unrelated to IFACE_phy's above)
 #  and if the driver module supports rfkill (IFACE_rfkill_index != 'NA'):
 #  IFACE_rfkill_state ::= <digit>, '1'(enabled) <>'1'(disabled:reason)
 #  IFACE_rfkill_soft ::= '0'|'1', '0'(unblocked), '1'(soft-blocked)
@@ -116,7 +119,7 @@ init_get_iface() # {{{1
 	unset IFACE_list IFACE_which IFACE_iface
 	unset IFACE_path IFACE_bus
 	IFACE_module_path=NA
-	unset IFACE_phy IFACE_rfkill_index
+	IFACE_phy=NA IFACE_rfkill_index=NA
 	unset IFACE_rfkill_hard IFACE_rfkill_soft IFACE_rfkill_state
 }
 
