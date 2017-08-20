@@ -4,8 +4,10 @@ Linux shell library to retrieve basic network interface information.
 
 ## News
 
-**10-Aug-2017 Release 1.0.0**
- * First release.
+**20-Aug-2017 Release 1.1.0**
+ * Handle wireless kernel modules that don't support phy80211 and rfkill.
+ * API: Add value 'NA' for elements of `IFACE_wireless_phy` and
+   `IFACE_wireless_rfkill_index`.
 
 ## Scope
 
@@ -55,5 +57,6 @@ and - for fine-grained information -
 
 ## Old News
 
-* --
+_10-Aug-2017 Release 1.0.0_
+ * First release.
 
