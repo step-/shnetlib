@@ -1,7 +1,7 @@
 # Compatible sh bash busybox-ash dash
 # Copyright (C) 2017 step
 # License: GNU GPL2
-# Version 1.1.0
+# Version 1.2.0
 # Homepage: https://github.com/step-/shnetlib
 
 # This file is sourced, not run.
@@ -18,6 +18,7 @@ set +f
 # IFACE_<list>_path ::= list of <path>
 # IFACE_<list>_iface ::= list of <iface>
 # IFACE_<list>_bus ::= list of ('NA' | 'pci' | 'usb' | ...)
+# IFACE_<list>_operstate ::= list of ('up' | 'down' | 'unknown' | ...)
 # Similarly as above for each member of <list>.
 # IFACE_wireless_phy ::= list of ('phy'<integer> | 'NA')
 # IFACE_wireless_rfkill_index ::= list of (<integer> | 'NA') for rfkill command
@@ -30,12 +31,13 @@ set +f
 
 enum_interfaces() # {{{1
 {
-	local p x bus list which
+	local p x bus operstate list which
 	IFACE_other_n=0 IFACE_wired_n=0 IFACE_wireless_n=0
 	unset IFACE_other_which IFACE_wired_which IFACE_wireless_which
 	unset IFACE_other_path IFACE_wired_path IFACE_wireless_path
 	unset IFACE_other_iface IFACE_wired_iface IFACE_wireless_iface
 	unset IFACE_other_bus IFACE_wired_bus IFACE_wireless_bus
+	unset IFACE_other_operstate IFACE_wired_operstate IFACE_wireless_operstate
 	unset IFACE_wireless_phy IFACE_wireless_rfkill_index
 	BUS_other_n=0 BUS_pci_n=0 BUS_usb_n=0
 	unset BUS_other_which BUS_pci_which BUS_usb_which
@@ -44,6 +46,7 @@ enum_interfaces() # {{{1
 		x=$(ls -l $p/device/subsystem 2>/dev/null)
 		bus=${x##*/}
 		bus=${bus:-NA}
+    read operstate < $p/operstate
 		case ${p##*/} in
 			lo|teredo)
 				list=other which=$IFACE_other_n
@@ -52,6 +55,7 @@ enum_interfaces() # {{{1
 				IFACE_other_path="$IFACE_other_path $p"
 				IFACE_other_iface="$IFACE_other_iface ${p##*/}"
 				IFACE_other_bus="$IFACE_other_bus $bus"
+				IFACE_other_operstate="$IFACE_other_operstate $operstate"
 				;;
 			*)
 				if [ -e $p/wireless ]; then
@@ -61,6 +65,7 @@ enum_interfaces() # {{{1
 					IFACE_wireless_path="$IFACE_wireless_path $p"
 					IFACE_wireless_iface="$IFACE_wireless_iface ${p##*/}"
 					IFACE_wireless_bus="$IFACE_wireless_bus $bus"
+					IFACE_wireless_operstate="$IFACE_wireless_operstate $operstate"
 					x=NA; [ -e "$p/phy80211/name" ] && read x < "$p/phy80211/name"
 					IFACE_wireless_phy="$IFACE_wireless_phy ${x:-NA}"
 					for x in $p/phy80211/rfkill*/index; do
@@ -76,6 +81,7 @@ enum_interfaces() # {{{1
 					IFACE_wired_path="$IFACE_wired_path $p"
 					IFACE_wired_iface="$IFACE_wired_iface ${p##*/}"
 					IFACE_wired_bus="$IFACE_wired_bus $bus"
+					IFACE_wired_operstate="$IFACE_wired_operstate $operstate"
 				fi
 				;;
 		esac
@@ -104,6 +110,7 @@ enum_interfaces() # {{{1
 # IFACE_path ::= <IFACE_which>'th element of IFACE_<IFACE_list>_path
 # IFACE_iface ::= <IFACE_which>'th element of IFACE_<IFACE_list>_iface (basename of IFACE_path)
 # IFACE_bus ::= 'NA' | <IFACE_which>'th element of IFACE_<IFACE_list>_bus
+# IFACE_operstate := 'up' | 'down' | 'unknown' ; 'up' requires: wired cable plugged in or wireless AP connected
 # When SHNETLIB_MODE==detailed also:
 #  IFACE_module_path ::= 'NA' | driver module path
 # When IFACE_list == 'wireless' also:
@@ -117,7 +124,7 @@ enum_interfaces() # {{{1
 init_get_iface() # {{{1
 {
 	unset IFACE_list IFACE_which IFACE_iface
-	unset IFACE_path IFACE_bus
+	unset IFACE_path IFACE_bus IFACE_operstate
 	IFACE_module_path=NA
 	IFACE_phy=NA IFACE_rfkill_index=NA
 	unset IFACE_rfkill_hard IFACE_rfkill_soft IFACE_rfkill_state
@@ -143,11 +150,12 @@ get_iface_other() # [--export] $1-which {{{1
 	set -- $IFACE_other_path; shift $which; IFACE_path=$1
 	set -- $IFACE_other_iface; shift $which; IFACE_iface=$1
 	set -- $IFACE_other_bus; shift $which; IFACE_bus=$1
+	set -- $IFACE_other_operstate; shift $which; IFACE_operstate=$1
 	get_iface_details_common $IFACE_path
 	IFACE_which=$which # end
 	[ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list \
 		IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus \
-		IFACE_module_path "$IFACE_module_path" \
+		IFACE_operstate "$IFACE_operstate" IFACE_module_path "$IFACE_module_path" \
 		IFACE_which $IFACE_which
 }
 
@@ -162,6 +170,7 @@ get_iface_wireless() # [--export] $1-which {{{1
 	set -- $IFACE_wireless_path; shift $which; IFACE_path=$1
 	set -- $IFACE_wireless_iface; shift $which; IFACE_iface=$1
 	set -- $IFACE_wireless_bus; shift $which; IFACE_bus=$1
+	set -- $IFACE_wireless_operstate; shift $which; IFACE_operstate=$1
 	set -- $IFACE_wireless_phy; shift $which; IFACE_phy=$1
 	set -- $IFACE_wireless_rfkill_index; shift $which; IFACE_rfkill_index=$1
 	get_iface_details_common $IFACE_path
@@ -175,7 +184,7 @@ get_iface_wireless() # [--export] $1-which {{{1
 	if [ "$opt_e" ]; then
 		printf "%s='%s'\n" IFACE_list $IFACE_list \
 		IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus \
-		IFACE_module_path "$IFACE_module_path" \
+		IFACE_operstate "$IFACE_operstate" IFACE_module_path "$IFACE_module_path" \
 		IFACE_phy $IFACE_phy IFACE_rfkill_index $IFACE_rfkill_index
 		if ! [ NA = $IFACE_rfkill_index ]; then
 			printf "%s='%s'\n" \
@@ -198,11 +207,12 @@ get_iface_wired() # [--export] $1-which {{{1
 	set -- $IFACE_wired_path; shift $which; IFACE_path=$1
 	set -- $IFACE_wired_iface; shift $which; IFACE_iface=$1
 	set -- $IFACE_wired_bus; shift $which; IFACE_bus=$1
+	set -- $IFACE_wired_operstate; shift $which; IFACE_operstate=$1
 	get_iface_details_common $IFACE_path
 	IFACE_which=$which # end
 	[ "$opt_e" ] && printf "%s='%s'\n" IFACE_list $IFACE_list \
 		IFACE_path $IFACE_path IFACE_iface $IFACE_iface IFACE_bus $IFACE_bus \
-		IFACE_module_path "$IFACE_module_path" \
+		IFACE_operstate "$IFACE_operstate" IFACE_module_path "$IFACE_module_path" \
 		IFACE_which $IFACE_which
 }
 
