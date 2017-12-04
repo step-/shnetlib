@@ -18,7 +18,7 @@ set +f
 # IFACE_<list>_path ::= list of <path>
 # IFACE_<list>_iface ::= list of <iface>
 # IFACE_<list>_bus ::= list of ('NA' | 'pci' | 'usb' | ...)
-# IFACE_<list>_operstate ::= list of ('up' | 'down' | 'unknown' | ...)
+# IFACE_<list>_operstate ::= list of ('up' | 'down' | 'dormant' | 'unknown' )
 # Similarly as above for each member of <list>.
 # IFACE_wireless_phy ::= list of ('phy'<integer> | 'NA')
 # IFACE_wireless_rfkill_index ::= list of (<integer> | 'NA') for rfkill command
@@ -110,7 +110,7 @@ enum_interfaces() # {{{1
 # IFACE_path ::= <IFACE_which>'th element of IFACE_<IFACE_list>_path
 # IFACE_iface ::= <IFACE_which>'th element of IFACE_<IFACE_list>_iface (basename of IFACE_path)
 # IFACE_bus ::= 'NA' | <IFACE_which>'th element of IFACE_<IFACE_list>_bus
-# IFACE_operstate := 'up' | 'down' | 'unknown' ; 'up' requires: wired cable plugged in or wireless AP connected
+# IFACE_operstate := 'up' | 'down' | 'dormant' | 'unknown' ; 'up' requires: wired cable plugged in or wireless AP connected
 # When SHNETLIB_MODE==detailed also:
 #  IFACE_module_path ::= 'NA' | driver module path
 # When IFACE_list == 'wireless' also:
