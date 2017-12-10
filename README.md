@@ -4,6 +4,11 @@ Linux shell library to retrieve basic network interface information.
 
 ## News
 
+**10-Dec-2017 Release 1.2.0**
+ * Add `IFACE_carrier` 'NA' '0' '1'.
+ * Add `IFACE_opermode` 'NA' 'up' 'down' 'dormant' 'unknown'.
+
+--- 2017-12-03 19:27:56 +0100 6b14856
 **20-Aug-2017 Release 1.1.0**
  * Handle wireless kernel modules that don't support phy80211 and rfkill.
  * API: Add value 'NA' for elements of `IFACE_wireless_phy` and
