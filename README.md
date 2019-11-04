@@ -4,6 +4,9 @@ Linux shell library to retrieve basic network interface information.
 
 ## News
 
+**04-Nov-2019 Release 1.2.1**
+ * Hide harmless error message.
+
 **10-Dec-2017 Release 1.2.0**
  * Add `IFACE_carrier` 'NA' '0' '1'.
  * Add `IFACE_opermode` 'NA' 'up' 'down' 'dormant' 'unknown'.

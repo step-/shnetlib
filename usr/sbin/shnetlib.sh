@@ -1,7 +1,7 @@
 # Compatible sh bash busybox-ash dash
-# Copyright (C) 2017 step
+# Copyright (C) 2017-2019 step
 # License: GNU GPL2
-# Version 1.2.0
+# Version 1.2.1
 # Homepage: https://github.com/step-/shnetlib
 
 # This file is sourced, not run.
@@ -48,7 +48,7 @@ enum_interfaces() # {{{1
 		x=$(ls -l $p/device/subsystem 2>/dev/null)
 		bus=${x##*/}
 		bus=${bus:-NA}
-		read carrier < $p/carrier #2>/dev/null
+		read carrier < $p/carrier 2>/dev/null
 		! [ "$carrier" ] && carrier=NA
 		read operstate < $p/operstate
 		! [ "$operstate" ] && operstate=NA
